@@ -4,7 +4,7 @@ Open-source reproduction of the Hyperliquid cron job we run in production. It cl
 
 ## Features
 - Copies the production `hyperliquid_marketmaker.py` logic (inventory-aware Avellaneda sizing, $10 minimum order enforcement, per-market sizing).
-- Uses an agent.market background instance (instead of the legacy `/analysis` call) so the prompt includes the full market snapshot and providers return JSON with `parameters`, `strategyRecommendations`, and monitoring text.
+- Uses an agent.market background instance so the prompt includes the full market snapshot and providers return JSON with `parameters`, `strategyRecommendations`, and monitoring text.
 - Drop-in shell wrapper (`scripts/market_maker_cycle.sh`) that matches the cron job behavior in production.
 
 ## Prerequisites

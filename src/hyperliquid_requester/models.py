@@ -12,7 +12,6 @@ class SymbolSnapshot:
     mid_price: float
     sz_decimals: int
     inventory: float
-    change_24h: Optional[float] = None
     notional_liquidity: Optional[float] = None
 
     def as_prompt_dict(self) -> Dict[str, Any]:
@@ -21,6 +20,5 @@ class SymbolSnapshot:
         data["midPrice"] = data.pop("mid_price")
         data["sizeDecimals"] = data.pop("sz_decimals")
         data["inventory"] = data.pop("inventory")
-        data["change24h"] = data.pop("change_24h")
         data["notionalLiquidity"] = data.pop("notional_liquidity")
         return data

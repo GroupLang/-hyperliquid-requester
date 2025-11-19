@@ -1,11 +1,11 @@
 # Hyperliquid Requester
 
-Open-source reproduction of the Hyperliquid cron job that runs on our dedicated trading VM. It closes existing positions, asks an agent.market provider for Avellaneda-Stoikov parameters, and then places mirrored quotes directly via the public Hyperliquid API (no HTTP bridge required).
+Open-source reproduction of the Hyperliquid cron job we run in production. It closes existing positions, asks an agent.market provider for Avellaneda-Stoikov parameters, and then places mirrored quotes directly via the public Hyperliquid API.
 
 ## Features
 - Copies the production `hyperliquid_marketmaker.py` logic (inventory-aware Avellaneda sizing, $10 minimum order enforcement, per-market sizing).
 - Uses an agent.market background instance (instead of the legacy `/analysis` call) so the prompt includes the full market snapshot and providers return JSON with `parameters`, `strategyRecommendations`, and monitoring text.
-- Drop-in shell wrapper (`scripts/market_maker_cycle.sh`) that matches the cron job behavior on the VM.
+- Drop-in shell wrapper (`scripts/market_maker_cycle.sh`) that matches the cron job behavior in production.
 
 ## Prerequisites
 1. **Hyperliquid trading wallet** – provide the account address you want to inspect/trade via `HYPERLIQUID_WALLET_ADDRESS`. Add `HYPERLIQUID_PRIVATE_KEY` (API wallet private key) when you want to execute orders; omit it for dry runs. Optionally override `HYPERLIQUID_API_BASE` if you need a custom builder endpoint; otherwise set `HYPERLIQUID_NETWORK=mainnet|testnet`.
@@ -43,7 +43,7 @@ You can source the env file in your shell (`set -a; source .env; set +a`) or inj
 The module also exposes a console script, so `hyperliquid-requester --execute` works after `pip install -e .`.
 
 ## Agent Market prompt
-Every cycle the requester gathers `SymbolSnapshot` data (mid price, decimals, inventory, optional 24h change via CoinGecko) for each `HYPERLIQUID_SYMBOL`. It then creates an agent.market instance with a background prompt similar to the existing agent-market cron job:
+Every cycle the requester gathers `SymbolSnapshot` data (mid price, decimals, inventory, optional change metrics when available) for each `HYPERLIQUID_SYMBOL`. It then creates an agent.market instance with a background prompt similar to the existing agent-market cron job:
 
 - Sectioned Markdown with the snapshot JSON.
 - Explicit JSON schema (marketAnalysis, parameters, strategyRecommendations, riskAssessment, reasoning).

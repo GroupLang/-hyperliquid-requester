@@ -8,8 +8,6 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-import requests
-
 from .agent_market import (
     AgentMarketAnalysisProvider,
     AgentMarketClient,
@@ -22,14 +20,6 @@ from .models import SymbolSnapshot
 logger = logging.getLogger(__name__)
 
 DEFAULT_MARKETS = ["BTC-PERP", "ETH-PERP", "SOL-PERP"]
-COINGECKO_ID_MAP = {
-    "BTC-PERP": "bitcoin",
-    "ETH-PERP": "ethereum",
-    "SOL-PERP": "solana",
-    "ARB-PERP": "arbitrum",
-    "AVAX-PERP": "avalanche-2",
-    "OP-PERP": "optimism",
-}
 
 
 @dataclass
@@ -216,7 +206,6 @@ class MarketMaker:
         ticker_map: Dict[str, Dict[str, Any]],
         inventory_map: Dict[str, float],
     ) -> List[SymbolSnapshot]:
-        changes = fetch_24h_changes(self.settings.primary_markets)
         snapshots: List[SymbolSnapshot] = []
         for symbol in self.settings.primary_markets:
             ticker = ticker_map.get(symbol)
@@ -232,7 +221,6 @@ class MarketMaker:
                     mid_price=float(price),
                     sz_decimals=sz_decimals,
                     inventory=inventory_map.get(symbol, 0.0),
-                    change_24h=changes.get(symbol),
                 )
             )
         return snapshots
@@ -292,36 +280,6 @@ def round_price(price: float, symbol: str) -> float:
     if price >= 1:
         return round(price, 2)
     return round(price, 4)
-
-
-def fetch_24h_changes(symbols: Sequence[str]) -> Dict[str, float]:
-    ids = {COINGECKO_ID_MAP[symbol] for symbol in symbols if symbol in COINGECKO_ID_MAP}
-    if not ids:
-        return {}
-    try:
-        response = requests.get(
-            "https://api.coingecko.com/api/v3/simple/price",
-            params={
-                "ids": ",".join(ids),
-                "vs_currencies": "usd",
-                "include_24hr_change": "true",
-            },
-            timeout=10,
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        logger.warning("Failed to fetch Coingecko changes: %s", exc)
-        return {}
-
-    data = response.json()
-    output: Dict[str, float] = {}
-    for symbol, cg_id in COINGECKO_ID_MAP.items():
-        if symbol not in symbols:
-            continue
-        change = data.get(cg_id, {}).get("usd_24h_change")
-        if change is not None:
-            output[symbol] = change
-    return output
 
 
 def _parse_markets(value: Optional[str]) -> List[str]:
